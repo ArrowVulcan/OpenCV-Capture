@@ -5,7 +5,7 @@ import win32api, win32ui, win32gui, win32con
 
 class ScreenCapture():
     
-    def __init__(self, name="Window", top=0, left=0, width=640, height=480, window=None, monitor=None, border=True):
+    def __init__(self, name="Window", top=0, left=0, width=640, height=480, window=None, monitor=None, border=True, d3d=None):
         
         self.hwnd = None
         self.name, self.top, self.left, self.width, self.height = name, top, left, width, height
@@ -25,9 +25,20 @@ class ScreenCapture():
             self.height = window_rect[3] - window_rect[1]
 
             if border:
-                self.left = -(self.border_width // 2)
-                self.top = -(self.border_height - self.border_width // 2)
+
+                if d3d:
+                    self.left = window_rect[0]
+                    self.top = window_rect[1]
+                else:
+                    self.left = -(self.border_width // 2)
+                    self.top = -(self.border_height - self.border_width // 2)
+
             else:
+
+                if d3d:
+                    self.left = window_rect[0] + (self.border_width // 2)
+                    self.top = window_rect[1] + (self.border_height - self.border_width // 2)
+
                 self.width -= self.border_width
                 self.height -= self.border_height
 
@@ -42,6 +53,9 @@ class ScreenCapture():
                 self.height = (monitor_bottom - monitor_top)
             except:
                 raise Exception(f"Display {monitor} not found.")
+
+        if d3d:
+            self.hwnd = None
 
         self.hdc = win32ui.CreateDCFromHandle(win32gui.GetDC(self.hwnd))
         self.cdc = self.hdc.CreateCompatibleDC()
@@ -71,6 +85,8 @@ class ScreenCapture():
 
         if not color:
             image = cv2.cvtColor(image, cv2.COLOR_RGBA2GRAY)
+        else:
+            image = cv2.cvtColor(image, cv2.COLOR_RGBA2RGB)
 
         return image
 
