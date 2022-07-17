@@ -8,7 +8,7 @@ class ScreenCapture():
     def __init__(self, name="Window", top=0, left=0, width=640, height=480, window=None, monitor=None, border=True, d3d=None):
         
         self.hwnd = None
-        self.name, self.top, self.left, self.width, self.height = name, top, left, width, height
+        self.name, self.top, self.left, self.width, self.height, self.window, self.monitor, self.border, self.d3d = name, top, left, width, height, window, monitor, border, d3d
 
         if window is not None:
             
@@ -26,7 +26,7 @@ class ScreenCapture():
 
             if border:
 
-                if d3d:
+                if self.d3d:
                     self.left = window_rect[0]
                     self.top = window_rect[1]
                 else:
@@ -35,7 +35,7 @@ class ScreenCapture():
 
             else:
 
-                if d3d:
+                if self.d3d:
                     self.left = window_rect[0] + (self.border_width // 2)
                     self.top = window_rect[1] + (self.border_height - self.border_width // 2)
 
@@ -54,7 +54,7 @@ class ScreenCapture():
             except:
                 raise Exception(f"Display {monitor} not found.")
 
-        if d3d:
+        if self.d3d:
             self.hwnd = None
 
         self.hdc = win32ui.CreateDCFromHandle(win32gui.GetDC(self.hwnd))
@@ -76,6 +76,16 @@ class ScreenCapture():
             win32gui.DeleteObject(self.hbit.GetHandle())
 
     def read(self, color=True):
+
+        if self.d3d:
+            hwnd = win32gui.FindWindow(None, self.window)
+            window_rect = win32gui.GetWindowRect(hwnd)
+            if self.border:
+                self.left = window_rect[0]
+                self.top = window_rect[1]
+            else:
+                self.left = window_rect[0] + (self.border_width // 2)
+                self.top = window_rect[1] + (self.border_height - self.border_width // 2)
         
         self.cdc.SelectObject(self.hbit)
         self.cdc.BitBlt((0, 0), (self.width, self.height), self.hdc, (self.left, self.top), win32con.SRCCOPY)
